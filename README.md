@@ -43,7 +43,7 @@ A modern, Netflix-inspired personal movie and TV show collection manager with us
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/flickvault.git
+git clone https://github.com/CyberBigfoot/flickvault.git
 cd flickvault
 ```
 
