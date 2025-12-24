@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FlickVault</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">🎬 FlickVault</div>
+            <div class="nav-buttons">
+                <button id="loginBtn" onclick="app.showLogin()">Login</button>
+                <button id="registerBtn" onclick="app.showRegister()">Register</button>
+                <button id="browseBtn" class="hidden" onclick="app.showBrowse()">Browse</button>
+                <button id="recommendBtn" class="hidden" onclick="app.showRecommendations()">Recommend</button>
+                <button id="analyticsBtn" class="hidden" onclick="app.showAnalytics()">Analytics</button>
+                <button id="settingsBtn" class="hidden" onclick="app.showSettings()">Settings</button>
+                <button id="logoutBtn" class="hidden" onclick="app.logout()">Logout</button>
+            </div>
+            <span id="userGreeting" class="hidden"></span>
+        </div>
+    </header>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Login</h2>
+            <form id="authForm">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="email" id="email" placeholder="Email" class="hidden">
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Continue</button>
+            </form>
+            <p id="authSwitch"></p>
+        </div>
+    </div>
+
+    <div id="browseModal" class="modal">
+        <div class="modal-content wide">
+            <button class="close-btn" onclick="app.closeBrowse()">×</button>
+            <h2>Browse Popular Content</h2>
+            
+            <div class="genre-filters">
+                <button class="genre-filter active" onclick="app.filterBrowse('all')">🎬 All</button>
+                <button class="genre-filter" onclick="app.filterBrowse('action')">💥 Action</button>
+                <button class="genre-filter" onclick="app.filterBrowse('comedy')">😂 Comedy</button>
+                <button class="genre-filter" onclick="app.filterBrowse('drama')">🎭 Drama</button>
+                <button class="genre-filter" onclick="app.filterBrowse('horror')">👻 Horror</button>
+                <button class="genre-filter" onclick="app.filterBrowse('romance')">❤️ Romance</button>
+                <button class="genre-filter" onclick="app.filterBrowse('thriller')">🔪 Thriller</button>
+                <button class="genre-filter" onclick="app.filterBrowse('scifi')">🚀 Sci-Fi</button>
+                <button class="genre-filter" onclick="app.filterBrowse('fantasy')">🧙 Fantasy</button>
+                <button class="genre-filter" onclick="app.filterBrowse('animation')">🎨 Animation</button>
+                <button class="genre-filter" onclick="app.filterBrowse('crime')">🕵️ Crime</button>
+                <button class="genre-filter" onclick="app.filterBrowse('documentary')">🎞️ Documentary</button>
+                <button class="genre-filter" onclick="app.filterBrowse('family')">👨‍👩‍👧‍👦 Family</button>
+                <button class="genre-filter" onclick="app.filterBrowse('mystery')">🔍 Mystery</button>
+            </div>
+            
+            <div class="scroll-container">
+                <div id="browseContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="detail-modal">
+        <div class="detail-content" id="detailModalContent">
+            <!-- Detail content loads here -->
+        </div>
+    </div>
+
+    <div id="recommendModal" class="modal">
+        <div class="modal-content wide">
+            <button class="close-btn" onclick="app.closeRecommendations()">×</button>
+            <h2>Get Recommendations</h2>
+            <div class="recommend-tabs">
+                <button class="tab-btn active" data-tab="vault" onclick="app.switchRecommendTab('vault')">My Vault</button>
+                <button class="tab-btn" data-tab="custom" onclick="app.switchRecommendTab('custom')">Custom Match</button>
+            </div>
+            <div id="vaultRecommendSection">
+                <p class="info-text">Get recommendations based on your vault's genres and preferences</p>
+                <button class="action-btn" onclick="app.getVaultRecommendations()">Get Recommendations</button>
+            </div>
+            <div id="customRecommendSection" class="hidden">
+                <p class="info-text">Enter two titles you like for personalized recommendations</p>
+                <input type="text" id="recommend1" placeholder="First title...">
+                <input type="text" id="recommend2" placeholder="Second title...">
+                <button class="action-btn" onclick="app.getCustomRecommendations()">Find Matches</button>
+            </div>
+            <div class="scroll-container">
+                <div id="recommendResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="analyticsModal" class="modal">
+        <div class="modal-content wide">
+            <button class="close-btn" onclick="app.closeAnalytics()">×</button>
+            <h2>📊 Analytics Dashboard</h2>
+            <div id="analyticsContent"></div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="app.closeSettings()">×</button>
+        <h2>Settings</h2>
+        <button class="action-btn" onclick="app.exportData()">📥 Export CSV</button>
+        <button class="action-btn" onclick="app.importData()">📤 Import CSV</button>
+        <button class="action-btn danger" onclick="app.clearAllData()">🗑️ Clear All Data</button>
+    </div>
+</div>
+
+    <div class="container">
+        <div id="welcomeSection">
+            <h1>Welcome to FlickVault</h1>
+            <p>Your personal movie and TV show collection manager</p>
+        </div>
+
+        <div id="appContent" class="hidden">
+            <div class="stats">
+                <div class="stat-card">
+                    <span id="totalMovies">0</span>
+                    <p>Movies</p>
+                </div>
+                <div class="stat-card">
+                    <span id="totalShows">0</span>
+                    <p>TV Shows</p>
+                </div>
+                <div class="stat-card">
+                    <span id="totalWatched">0</span>
+                    <p>Watched</p>
+                </div>
+                <div class="stat-card">
+                    <span id="avgRating">0</span>
+                    <p>Avg Rating</p>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search movies and TV shows...">
+                    <button class="search-btn" onclick="app.search()">🔍 Search</button>
+                    <button class="clear-btn" onclick="app.clearSearch()">✕ Clear</button>
+                </div>
+                <div id="searchResults"></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="app.switchTab('movies')">My Movies</button>
+                <button class="tab-btn" onclick="app.switchTab('shows')">My TV Shows</button>
+            </div>
+            <div id="moviesVault"></div>
+            <div id="showsVault" class="hidden"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
