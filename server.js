@@ -243,6 +243,41 @@ app.get('/api/tmdb/browse/:genre', async (req, res) => {
     }
 });
 
+// Get streaming providers
+app.get('/api/tmdb/providers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { type } = req.query;
+        const mediaType = type === 'tv' ? 'tv' : 'movie';
+        
+        const url = `https://api.themoviedb.org/3/${mediaType}/${id}/watch/providers?api_key=${TMDB_API_KEY}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Providers error:', error);
+        res.status(500).json({ error: 'Failed to fetch providers' });
+    }
+});
+
+// TMDB Search endpoint
+app.get('/api/tmdb/search', async (req, res) => {
+    try {
+        const { query, type } = req.query;
+        const mediaType = type === 'series' ? 'tv' : 'movie';
+        
+        const url = `https://api.themoviedb.org/3/search/${mediaType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('TMDB search error:', error);
+        res.status(500).json({ error: 'Failed to search TMDB' });
+    }
+});
+
 app.get('/api/tmdb/details/:id', async (req, res) => {
     try {
         const { id } = req.params;
