@@ -237,71 +237,91 @@ const app = {
     },
 
     async showOMDbDetail(imdbID) {
-        const modal = document.getElementById('detailModal');
-        modal.classList.add('active');
+    const modal = document.getElementById('detailModal');
+    modal.classList.add('active');
+    
+    const content = document.getElementById('detailModalContent');
+    content.innerHTML = '<div class="loading" style="padding:100px;"><div class="spinner"></div><p>Loading details...</p></div>';
+    
+    try {
+        const res = await fetch(`/api/details/${imdbID}`);
+        const item = await res.json();
         
-        const content = document.getElementById('detailModalContent');
-        content.innerHTML = '<div class="loading" style="padding:100px;"><div class="spinner"></div><p>Loading details...</p></div>';
-        
-        try {
-            const res = await fetch(`/api/details/${imdbID}`);
-            const item = await res.json();
+        if (item.Response === 'True') {
+            const title = item.Title;
+            const year = item.Year;
+            const rating = item.imdbRating !== 'N/A' ? item.imdbRating : 'N/A';
+            const runtime = item.Runtime;
+            const type = item.Type === 'movie' ? 'movie' : 'series';
             
-            if (item.Response === 'True') {
-                const title = item.Title;
-                const year = item.Year;
-                const rating = item.imdbRating !== 'N/A' ? item.imdbRating : 'N/A';
-                const runtime = item.Runtime;
-                const type = item.Type === 'movie' ? 'movie' : 'series';
+            // Try to get TMDB ID for streaming providers
+            let providersHTML = '';
+            try {
+                const searchRes = await fetch(`/api/tmdb/search?query=${encodeURIComponent(title)}&type=${type}`);
+                const searchData = await searchRes.json();
                 
-                content.innerHTML = `
-                    <button class="detail-close-btn" onclick="app.closeDetailModal()">×</button>
-                    <div class="detail-info">
-                        <div class="detail-header">
-                            <img class="detail-poster" src="${item.Poster !== 'N/A' ? item.Poster : 'https://via.placeholder.com/150x225?text=No+Image'}" alt="${title}">
-                            <div class="detail-main">
-                                <div class="detail-title">${title}</div>
-                                <div class="detail-meta">
-                                    <span class="media-badge ${type === 'series' ? 'tv' : ''}">${type === 'series' ? 'TV Show' : 'Movie'}</span>
-                                    <span>📅 ${year}</span>
-                                    ${runtime !== 'N/A' ? `<span>⏱️ ${runtime}</span>` : ''}
-                                    <span class="detail-rating">⭐ ${rating}</span>
+                if (searchData.results && searchData.results.length > 0) {
+                    const tmdbId = searchData.results[0].id;
+                    const providersRes = await fetch(`/api/tmdb/providers/${tmdbId}?type=${type}`);
+                    const providersData = await providersRes.json();
+                    
+                    if (providersData.results && providersData.results.US) {
+                        providersHTML = this.renderProviders(providersData.results.US);
+                    }
+                }
+            } catch (err) {
+                console.log('Could not fetch streaming providers:', err);
+            }
+            
+            content.innerHTML = `
+                <button class="detail-close-btn" onclick="app.closeDetailModal()">×</button>
+                <div class="detail-info">
+                    <div class="detail-header">
+                        <img class="detail-poster" src="${item.Poster !== 'N/A' ? item.Poster : 'https://via.placeholder.com/150x225?text=No+Image'}" alt="${title}">
+                        <div class="detail-main">
+                            <div class="detail-title">${title}</div>
+                            <div class="detail-meta">
+                                <span class="media-badge ${type === 'series' ? 'tv' : ''}">${type === 'series' ? 'TV Show' : 'Movie'}</span>
+                                <span>📅 ${year}</span>
+                                ${runtime !== 'N/A' ? `<span>⏱️ ${runtime}</span>` : ''}
+                                <span class="detail-rating">⭐ ${rating}</span>
+                            </div>
+                            ${item.Genre && item.Genre !== 'N/A' ? `
+                                <div class="detail-genres">
+                                    ${item.Genre.split(',').map(g => `<span class="genre-tag">${g.trim()}</span>`).join('')}
                                 </div>
-                                ${item.Genre && item.Genre !== 'N/A' ? `
-                                    <div class="detail-genres">
-                                        ${item.Genre.split(',').map(g => `<span class="genre-tag">${g.trim()}</span>`).join('')}
-                                    </div>
-                                ` : ''}
-                                <div class="detail-actions">
-                                    <button class="primary-btn" onclick="app.quickAdd('${imdbID}')">+ Add to Vault</button>
-                                    <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
-                                </div>
+                            ` : ''}
+                            <div class="detail-actions">
+                                <button class="primary-btn" onclick="app.quickAdd('${imdbID}')">+ Add to Vault</button>
+                                <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
                             </div>
                         </div>
-                        ${item.Plot && item.Plot !== 'N/A' ? `
-                            <div class="detail-overview">
-                                <h3 style="color:#e50914;margin-bottom:10px;">Overview</h3>
-                                <p>${item.Plot}</p>
-                            </div>
-                        ` : ''}
-                        ${item.Director && item.Director !== 'N/A' ? `
-                            <div style="margin-top:15px;">
-                                <strong style="color:#e50914;">Director:</strong> ${item.Director}
-                            </div>
-                        ` : ''}
-                        ${item.Actors && item.Actors !== 'N/A' ? `
-                            <div style="margin-top:10px;">
-                                <strong style="color:#e50914;">Cast:</strong> ${item.Actors}
-                            </div>
-                        ` : ''}
                     </div>
-                `;
-            }
-        } catch (err) {
-            console.error('Detail error:', err);
-            content.innerHTML = '<div style="padding:100px;text-align:center;color:#aaa;">Error loading details</div>';
+                    ${item.Plot && item.Plot !== 'N/A' ? `
+                        <div class="detail-overview">
+                            <h3 style="color:#e50914;margin-bottom:10px;">Overview</h3>
+                            <p>${item.Plot}</p>
+                        </div>
+                    ` : ''}
+                    ${item.Director && item.Director !== 'N/A' ? `
+                        <div style="margin-top:15px;">
+                            <strong style="color:#e50914;">Director:</strong> ${item.Director}
+                        </div>
+                    ` : ''}
+                    ${item.Actors && item.Actors !== 'N/A' ? `
+                        <div style="margin-top:10px;">
+                            <strong style="color:#e50914;">Cast:</strong> ${item.Actors}
+                        </div>
+                    ` : ''}
+                    ${providersHTML}
+                </div>
+            `;
         }
-    },
+    } catch (err) {
+        console.error('Detail error:', err);
+        content.innerHTML = '<div style="padding:100px;text-align:center;color:#aaa;">Error loading details</div>';
+    }
+},
 
     async quickAdd(imdbID) {
         try {
@@ -522,62 +542,124 @@ const app = {
     },
 
     async showDetailModal(tmdbId, mediaType) {
-        const modal = document.getElementById('detailModal');
-        modal.classList.add('active');
+    const modal = document.getElementById('detailModal');
+    modal.classList.add('active');
+    
+    const content = document.getElementById('detailModalContent');
+    content.innerHTML = '<div class="loading" style="padding:100px;"><div class="spinner"></div><p>Loading details...</p></div>';
+    
+    try {
+        const type = mediaType === 'tv' ? 'tv' : 'movie';
+        const res = await fetch(`/api/tmdb/details/${tmdbId}?type=${type}`);
+        const item = await res.json();
         
-        const content = document.getElementById('detailModalContent');
-        content.innerHTML = '<div class="loading" style="padding:100px;"><div class="spinner"></div><p>Loading details...</p></div>';
-        
-        try {
-            const type = mediaType === 'tv' ? 'tv' : 'movie';
-            const res = await fetch(`/api/tmdb/details/${tmdbId}?type=${type}`);
-            const item = await res.json();
+        if (item.id) {
+            const title = item.title || item.name;
+            const year = (item.release_date || item.first_air_date || '').split('-')[0];
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+            const runtime = item.runtime ? `${item.runtime} min` : (item.episode_run_time?.[0] ? `${item.episode_run_time[0]} min/ep` : '');
             
-            if (item.id) {
-                const title = item.title || item.name;
-                const year = (item.release_date || item.first_air_date || '').split('-')[0];
-                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-                const runtime = item.runtime ? `${item.runtime} min` : (item.episode_run_time?.[0] ? `${item.episode_run_time[0]} min/ep` : '');
+            // Fetch streaming providers
+            let providersHTML = '';
+            try {
+                const providersRes = await fetch(`/api/tmdb/providers/${tmdbId}?type=${type}`);
+                const providersData = await providersRes.json();
                 
-                content.innerHTML = `
-                    <button class="detail-close-btn" onclick="app.closeDetailModal()">×</button>
-                    ${item.backdrop_path ? `<img class="detail-backdrop" src="https://image.tmdb.org/t/p/original${item.backdrop_path}" alt="${title}">` : ''}
-                    <div class="detail-info">
-                        <div class="detail-header">
-                            <img class="detail-poster" src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${title}" onerror="this.src='https://via.placeholder.com/150x225?text=No+Image'">
-                            <div class="detail-main">
-                                <div class="detail-title">${title}</div>
-                                <div class="detail-meta">
-                                    <span class="media-badge ${type === 'tv' ? 'tv' : ''}">${type === 'tv' ? 'TV Show' : 'Movie'}</span>
-                                    <span>📅 ${year}</span>
-                                    ${runtime ? `<span>⏱️ ${runtime}</span>` : ''}
-                                    <span class="detail-rating">⭐ ${rating}</span>
+                if (providersData.results && providersData.results.US) {
+                    providersHTML = this.renderProviders(providersData.results.US);
+                }
+            } catch (err) {
+                console.log('Could not fetch streaming providers:', err);
+            }
+            
+            content.innerHTML = `
+                <button class="detail-close-btn" onclick="app.closeDetailModal()">×</button>
+                ${item.backdrop_path ? `<img class="detail-backdrop" src="https://image.tmdb.org/t/p/original${item.backdrop_path}" alt="${title}">` : ''}
+                <div class="detail-info">
+                    <div class="detail-header">
+                        <img class="detail-poster" src="https://image.tmdb.org/t/p/w500${item.poster_path}" alt="${title}" onerror="this.src='https://via.placeholder.com/150x225?text=No+Image'">
+                        <div class="detail-main">
+                            <div class="detail-title">${title}</div>
+                            <div class="detail-meta">
+                                <span class="media-badge ${type === 'tv' ? 'tv' : ''}">${type === 'tv' ? 'TV Show' : 'Movie'}</span>
+                                <span>📅 ${year}</span>
+                                ${runtime ? `<span>⏱️ ${runtime}</span>` : ''}
+                                <span class="detail-rating">⭐ ${rating}</span>
+                            </div>
+                            ${item.genres?.length ? `
+                                <div class="detail-genres">
+                                    ${item.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('')}
                                 </div>
-                                ${item.genres?.length ? `
-                                    <div class="detail-genres">
-                                        ${item.genres.map(g => `<span class="genre-tag">${g.name}</span>`).join('')}
-                                    </div>
-                                ` : ''}
-                                <div class="detail-actions">
-                                    <button class="primary-btn" onclick="app.addFromTMDB(${tmdbId}, '${type}')">+ Add to Vault</button>
-                                    <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
-                                </div>
+                            ` : ''}
+                            <div class="detail-actions">
+                                <button class="primary-btn" onclick="app.addFromTMDB(${tmdbId}, '${type}')">+ Add to Vault</button>
+                                <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
                             </div>
                         </div>
-                        ${item.overview ? `
-                            <div class="detail-overview">
-                                <h3 style="color:#e50914;margin-bottom:10px;">Overview</h3>
-                                <p>${item.overview}</p>
-                            </div>
-                        ` : ''}
                     </div>
-                `;
-            }
-        } catch (err) {
-            console.error('Detail error:', err);
-            content.innerHTML = '<div style="padding:100px;text-align:center;color:#aaa;">Error loading details</div>';
+                    ${item.overview ? `
+                        <div class="detail-overview">
+                            <h3 style="color:#e50914;margin-bottom:10px;">Overview</h3>
+                            <p>${item.overview}</p>
+                        </div>
+                    ` : ''}
+                    ${providersHTML}
+                </div>
+            `;
         }
-    },
+    } catch (err) {
+        console.error('Detail error:', err);
+        content.innerHTML = '<div style="padding:100px;text-align:center;color:#aaa;">Error loading details</div>';
+    }
+},
+
+renderProviders(providers) {
+    let html = '<div class="providers-section" style="margin-top:25px; padding-top:20px; border-top:2px solid rgba(255,255,255,0.1);">';
+    html += '<h3 style="color:#e50914;margin-bottom:15px;">🎬 Where to Watch</h3>';
+    
+    const categories = [
+        { key: 'flatrate', label: 'Stream', icon: '▶️' },
+        { key: 'buy', label: 'Buy', icon: '💰' },
+        { key: 'rent', label: 'Rent', icon: '🎫' }
+    ];
+    
+    let hasProviders = false;
+    
+    categories.forEach(cat => {
+        if (providers[cat.key] && providers[cat.key].length > 0) {
+            hasProviders = true;
+            html += `
+                <div style="margin-bottom:15px;">
+                    <div style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:8px;font-weight:bold;">
+                        ${cat.icon} ${cat.label}
+                    </div>
+                    <div class="providers-list">
+                        ${providers[cat.key].map(p => `
+                            <div class="provider-item" title="${p.provider_name}">
+                                <img src="https://image.tmdb.org/t/p/original${p.logo_path}" 
+                                     alt="${p.provider_name}"
+                                     onerror="this.parentElement.style.display='none'">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    if (!hasProviders) {
+        html += '<p style="color:rgba(255,255,255,0.5);font-style:italic;">Streaming information not available</p>';
+    }
+    
+    html += '</div>';
+    return html;
+},
+
+async getTMDBKey() {
+    // This is a placeholder - the key is on the server side
+    // We'll use the TMDB API through our server
+    return '';
+},
 
     closeDetailModal() {
         document.getElementById('detailModal').classList.remove('active');
