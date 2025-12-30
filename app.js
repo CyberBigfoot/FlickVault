@@ -406,6 +406,20 @@ const app = {
         
         this.renderVault();
     },
+	
+	toggleFilters(type) {
+    const content = document.getElementById(`${type}FiltersContent`);
+    const btn = event.target.closest('.toggle-filters-btn');
+    const arrow = btn.querySelector('.filter-arrow');
+    
+    if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        arrow.textContent = '▲';
+    } else {
+        content.classList.add('collapsed');
+        arrow.textContent = '▼';
+    }
+},
 
     getFilteredItems(items, type) {
         const filters = this.filters[type];
