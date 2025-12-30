@@ -153,84 +153,96 @@
             </div>
 
             <!-- Movie Filters -->
-            <div id="moviesFilters" class="filters-section">
-                <div class="filters-header">
-                    <h3>🔍 Filter & Sort</h3>
-                    <button class="clear-filters-btn" onclick="app.clearFilters('movies')">Clear Filters</button>
-                </div>
-                <div class="filters-grid">
-                    <input type="text" 
-                           id="movieFilterSearch" 
-                           placeholder="Search by title or genre..." 
-                           oninput="app.updateFilter('movies', 'search', this.value)">
-                    
-                    <select id="movieFilterWatched" onchange="app.updateFilter('movies', 'watched', this.value)">
-                        <option value="all">All Status</option>
-                        <option value="watched">Watched</option>
-                        <option value="unwatched">Unwatched</option>
-                    </select>
-                    
-                    <select id="movieFilterRating" onchange="app.updateFilter('movies', 'rating', this.value)">
-                        <option value="all">All Ratings</option>
-                        <option value="5">★★★★★ (5 stars)</option>
-                        <option value="4">★★★★☆ (4 stars)</option>
-                        <option value="3">★★★☆☆ (3 stars)</option>
-                        <option value="2">★★☆☆☆ (2 stars)</option>
-                        <option value="1">★☆☆☆☆ (1 star)</option>
-                    </select>
-                    
-                    <select id="movieFilterGenre" onchange="app.updateFilter('movies', 'genre', this.value)">
-                        <option value="all">All Genres</option>
-                    </select>
-                    
-                    <select id="movieFilterSort" onchange="app.updateFilter('movies', 'sort', this.value)">
-                        <option value="recent">Recently Added</option>
-                        <option value="title">Title (A-Z)</option>
-                        <option value="year">Year (Newest)</option>
-                        <option value="rating">My Rating</option>
-                    </select>
-                </div>
-            </div>
+<div id="moviesFilters" class="filters-wrapper">
+    <button class="toggle-filters-btn" onclick="app.toggleFilters('movies')">
+        🔍 Filter & Sort
+        <span class="filter-arrow">▼</span>
+    </button>
+    <div class="filters-section collapsed" id="moviesFiltersContent">
+        <div class="filters-header">
+            <h3>🔍 Filter & Sort</h3>
+            <button class="clear-filters-btn" onclick="app.clearFilters('movies')">Clear Filters</button>
+        </div>
+        <div class="filters-grid">
+            <input type="text" 
+                   id="movieFilterSearch" 
+                   placeholder="Search by title or genre..." 
+                   oninput="app.updateFilter('movies', 'search', this.value)">
+            
+            <select id="movieFilterWatched" onchange="app.updateFilter('movies', 'watched', this.value)">
+                <option value="all">All Status</option>
+                <option value="watched">Watched</option>
+                <option value="unwatched">Unwatched</option>
+            </select>
+            
+            <select id="movieFilterRating" onchange="app.updateFilter('movies', 'rating', this.value)">
+                <option value="all">All Ratings</option>
+                <option value="5">★★★★★ (5 stars)</option>
+                <option value="4">★★★★☆ (4 stars)</option>
+                <option value="3">★★★☆☆ (3 stars)</option>
+                <option value="2">★★☆☆☆ (2 stars)</option>
+                <option value="1">★☆☆☆☆ (1 star)</option>
+            </select>
+            
+            <select id="movieFilterGenre" onchange="app.updateFilter('movies', 'genre', this.value)">
+                <option value="all">All Genres</option>
+            </select>
+            
+            <select id="movieFilterSort" onchange="app.updateFilter('movies', 'sort', this.value)">
+                <option value="recent">Recently Added</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="year">Year (Newest)</option>
+                <option value="rating">My Rating</option>
+            </select>
+        </div>
+    </div>
+</div>
 
-            <!-- TV Show Filters -->
-            <div id="showsFilters" class="filters-section hidden">
-                <div class="filters-header">
-                    <h3>🔍 Filter & Sort</h3>
-                    <button class="clear-filters-btn" onclick="app.clearFilters('shows')">Clear Filters</button>
-                </div>
-                <div class="filters-grid">
-                    <input type="text" 
-                           id="showFilterSearch" 
-                           placeholder="Search by title or genre..." 
-                           oninput="app.updateFilter('shows', 'search', this.value)">
-                    
-                    <select id="showFilterWatched" onchange="app.updateFilter('shows', 'watched', this.value)">
-                        <option value="all">All Status</option>
-                        <option value="watched">Watched</option>
-                        <option value="unwatched">Unwatched</option>
-                    </select>
-                    
-                    <select id="showFilterRating" onchange="app.updateFilter('shows', 'rating', this.value)">
-                        <option value="all">All Ratings</option>
-                        <option value="5">★★★★★ (5 stars)</option>
-                        <option value="4">★★★★☆ (4 stars)</option>
-                        <option value="3">★★★☆☆ (3 stars)</option>
-                        <option value="2">★★☆☆☆ (2 stars)</option>
-                        <option value="1">★☆☆☆☆ (1 star)</option>
-                    </select>
-                    
-                    <select id="showFilterGenre" onchange="app.updateFilter('shows', 'genre', this.value)">
-                        <option value="all">All Genres</option>
-                    </select>
-                    
-                    <select id="showFilterSort" onchange="app.updateFilter('shows', 'sort', this.value)">
-                        <option value="recent">Recently Added</option>
-                        <option value="title">Title (A-Z)</option>
-                        <option value="year">Year (Newest)</option>
-                        <option value="rating">My Rating</option>
-                    </select>
-                </div>
-            </div>
+<!-- TV Show Filters -->
+<div id="showsFilters" class="filters-wrapper hidden">
+    <button class="toggle-filters-btn" onclick="app.toggleFilters('shows')">
+        🔍 Filter & Sort
+        <span class="filter-arrow">▼</span>
+    </button>
+    <div class="filters-section collapsed" id="showsFiltersContent">
+        <div class="filters-header">
+            <h3>🔍 Filter & Sort</h3>
+            <button class="clear-filters-btn" onclick="app.clearFilters('shows')">Clear Filters</button>
+        </div>
+        <div class="filters-grid">
+            <input type="text" 
+                   id="showFilterSearch" 
+                   placeholder="Search by title or genre..." 
+                   oninput="app.updateFilter('shows', 'search', this.value)">
+            
+            <select id="showFilterWatched" onchange="app.updateFilter('shows', 'watched', this.value)">
+                <option value="all">All Status</option>
+                <option value="watched">Watched</option>
+                <option value="unwatched">Unwatched</option>
+            </select>
+            
+            <select id="showFilterRating" onchange="app.updateFilter('shows', 'rating', this.value)">
+                <option value="all">All Ratings</option>
+                <option value="5">★★★★★ (5 stars)</option>
+                <option value="4">★★★★☆ (4 stars)</option>
+                <option value="3">★★★☆☆ (3 stars)</option>
+                <option value="2">★★☆☆☆ (2 stars)</option>
+                <option value="1">★☆☆☆☆ (1 star)</option>
+            </select>
+            
+            <select id="showFilterGenre" onchange="app.updateFilter('shows', 'genre', this.value)">
+                <option value="all">All Genres</option>
+            </select>
+            
+            <select id="showFilterSort" onchange="app.updateFilter('shows', 'sort', this.value)">
+                <option value="recent">Recently Added</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="year">Year (Newest)</option>
+                <option value="rating">My Rating</option>
+            </select>
+        </div>
+    </div>
+</div>
 
             <div id="moviesVault"></div>
             <div id="showsVault" class="hidden"></div>
