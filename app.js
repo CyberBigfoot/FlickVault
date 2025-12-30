@@ -1100,18 +1100,212 @@ const app = {
     },
 
     showAnalytics() {
-        const movies = this.vault.movies;
-        const shows = this.vault.shows;
-        const allItems = [...movies, ...shows];
-        
-        if (allItems.length === 0) {
-            this.showToast('⚠️ Add items to see analytics');
-            return;
-        }
+    const movies = this.vault.movies;
+    const shows = this.vault.shows;
+    const allItems = [...movies, ...shows];
+    
+    if (allItems.length === 0) {
+        this.showToast('⚠️ Add items to see analytics');
+        return;
+    }
 
-        document.getElementById('analyticsContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-        document.getElementById('analyticsModal').classList.add('active');
-    },
+    document.getElementById('analyticsModal').classList.add('active');
+    
+    // Calculate analytics
+    const totalItems = allItems.length;
+    const watchedItems = allItems.filter(i => i.watched).length;
+    const watchRate = ((watchedItems / totalItems) * 100).toFixed(1);
+    
+    const ratedItems = allItems.filter(i => i.rating > 0);
+    const avgRating = ratedItems.length > 0 
+        ? (ratedItems.reduce((sum, i) => sum + i.rating, 0) / ratedItems.length).toFixed(1)
+        : 0;
+    const fiveStarCount = allItems.filter(i => i.rating === 5).length;
+    
+    // Calculate total runtime (for movies)
+    let totalRuntime = 0;
+    movies.forEach(m => {
+        if (m.Runtime && m.Runtime !== 'N/A') {
+            const minutes = parseInt(m.Runtime.replace(/\D/g, ''));
+            if (!isNaN(minutes)) totalRuntime += minutes;
+        }
+    });
+    const runtimeHours = Math.floor(totalRuntime / 60);
+    const runtimeMinutes = totalRuntime % 60;
+    
+    // Genre analysis
+    const genreCount = {};
+    allItems.forEach(item => {
+        if (item.Genre && item.Genre !== 'N/A') {
+            item.Genre.split(',').forEach(g => {
+                const genre = g.trim();
+                genreCount[genre] = (genreCount[genre] || 0) + 1;
+            });
+        }
+    });
+    
+    const topGenres = Object.entries(genreCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    const maxGenreCount = topGenres[0] ? topGenres[0][1] : 1;
+    
+    // Year analysis
+    const yearCount = {};
+    allItems.forEach(item => {
+        if (item.Year && item.Year !== 'N/A') {
+            const year = item.Year.split('–')[0]; // Handle TV shows with year ranges
+            yearCount[year] = (yearCount[year] || 0) + 1;
+        }
+    });
+    
+    const topYears = Object.entries(yearCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    // Decade analysis
+    const decadeCount = {};
+    allItems.forEach(item => {
+        if (item.Year && item.Year !== 'N/A') {
+            const year = parseInt(item.Year.split('–')[0]);
+            if (!isNaN(year)) {
+                const decade = Math.floor(year / 10) * 10;
+                decadeCount[`${decade}s`] = (decadeCount[`${decade}s`] || 0) + 1;
+            }
+        }
+    });
+    
+    const topDecades = Object.entries(decadeCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    // Rating distribution
+    const movieRatings = [0, 0, 0, 0, 0];
+    const showRatings = [0, 0, 0, 0, 0];
+    
+    movies.forEach(m => {
+        if (m.rating > 0) movieRatings[m.rating - 1]++;
+    });
+    
+    shows.forEach(s => {
+        if (s.rating > 0) showRatings[s.rating - 1]++;
+    });
+    
+    // Generate HTML
+    document.getElementById('analyticsContent').innerHTML = `
+        <div class="analytics-card full-width">
+            <h3>📊 Collection Overview</h3>
+            <div class="overview-stats">
+                <div class="overview-item">
+                    <div class="overview-number">${totalItems}</div>
+                    <div class="overview-label">Total Items</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">${movies.length}</div>
+                    <div class="overview-label">Movies</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">${shows.length}</div>
+                    <div class="overview-label">TV Shows</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">${watchRate}%</div>
+                    <div class="overview-label">Watch Rate</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">${avgRating}</div>
+                    <div class="overview-label">Avg Rating</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">${fiveStarCount}</div>
+                    <div class="overview-label">5-Star Items</div>
+                </div>
+                ${totalRuntime > 0 ? `
+                    <div class="overview-item">
+                        <div class="overview-number">${runtimeHours}h ${runtimeMinutes}m</div>
+                        <div class="overview-label">Total Runtime</div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+        
+        <div class="analytics-grid">
+            <div class="analytics-card">
+                <h3>🎭 Top Genres</h3>
+                ${topGenres.length > 0 ? topGenres.map(([genre, count]) => `
+                    <div style="margin-bottom: 15px;">
+                        <div class="analytics-item">
+                            <span class="analytics-label">${genre}</span>
+                            <span class="analytics-value">${count}</span>
+                        </div>
+                        <div class="genre-bar">
+                            <div class="genre-bar-fill" style="width: ${(count / maxGenreCount) * 100}%"></div>
+                        </div>
+                    </div>
+                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No genre data available</p>'}
+            </div>
+            
+            <div class="analytics-card">
+                <h3>📅 Top Years</h3>
+                ${topYears.length > 0 ? topYears.map(([year, count]) => `
+                    <div class="analytics-item">
+                        <span class="analytics-label">${year}</span>
+                        <span class="analytics-value">${count} items</span>
+                    </div>
+                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No year data available</p>'}
+            </div>
+            
+            <div class="analytics-card">
+                <h3>📆 Top Decades</h3>
+                ${topDecades.length > 0 ? topDecades.map(([decade, count]) => `
+                    <div class="analytics-item">
+                        <span class="analytics-label">${decade}</span>
+                        <span class="analytics-value">${count} items</span>
+                    </div>
+                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No decade data available</p>'}
+            </div>
+            
+            <div class="analytics-card">
+                <h3>⭐ Movie Rating Distribution</h3>
+                ${movieRatings.some(r => r > 0) ? movieRatings.map((count, index) => `
+                    <div class="analytics-item">
+                        <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
+                        <span class="analytics-value">${count}</span>
+                    </div>
+                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No movie ratings yet</p>'}
+            </div>
+            
+            <div class="analytics-card">
+                <h3>⭐ TV Show Rating Distribution</h3>
+                ${showRatings.some(r => r > 0) ? showRatings.map((count, index) => `
+                    <div class="analytics-item">
+                        <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
+                        <span class="analytics-value">${count}</span>
+                    </div>
+                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No TV show ratings yet</p>'}
+            </div>
+            
+            <div class="analytics-card">
+                <h3>✅ Watch Status</h3>
+                <div class="analytics-item">
+                    <span class="analytics-label">Watched</span>
+                    <span class="analytics-value">${watchedItems} (${watchRate}%)</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-label">Unwatched</span>
+                    <span class="analytics-value">${totalItems - watchedItems} (${(100 - watchRate).toFixed(1)}%)</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-label">Watched Movies</span>
+                    <span class="analytics-value">${movies.filter(m => m.watched).length}</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-label">Watched Shows</span>
+                    <span class="analytics-value">${shows.filter(s => s.watched).length}</span>
+                </div>
+            </div>
+        </div>
+    `;
+},
 
     closeAnalytics() {
         document.getElementById('analyticsModal').classList.remove('active');
