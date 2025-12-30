@@ -356,6 +356,54 @@ header.header-hidden {
     gap: 12px;
 }
 
+.filters-wrapper {
+    margin: 20px 0;
+}
+
+.toggle-filters-btn {
+    width: 100%;
+    padding: 15px 20px;
+    background: rgba(229, 9, 20, 0.2);
+    border: 2px solid rgba(229, 9, 20, 0.5);
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.toggle-filters-btn:hover {
+    background: rgba(229, 9, 20, 0.3);
+    border-color: #e50914;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+}
+
+.filter-arrow {
+    font-size: 14px;
+    transition: transform 0.3s;
+}
+
+.filters-section.collapsed {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+    padding: 0;
+    transition: all 0.3s ease-out;
+}
+
+.filters-section:not(.collapsed) {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 15px;
+    transition: all 0.3s ease-in;
+}
+
 .filters-grid input,
 .filters-grid select {
     padding: 12px 15px;
