@@ -295,6 +295,24 @@ app.get('/api/tmdb/details/:id', async (req, res) => {
     }
 });
 
+// Get trailers/videos
+app.get('/api/tmdb/videos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { type } = req.query;
+        const mediaType = type === 'tv' ? 'tv' : 'movie';
+        
+        const url = `https://api.themoviedb.org/3/${mediaType}/${id}/videos?api_key=${TMDB_API_KEY}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Videos error:', error);
+        res.status(500).json({ error: 'Failed to fetch videos' });
+    }
+});
+
 app.get('/api/tmdb/recommendations', async (req, res) => {
     try {
         const { page } = req.query;
