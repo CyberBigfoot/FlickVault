@@ -418,6 +418,20 @@ const app = {
         }
     },
 
+    toggleBrowseCategories() {
+    const filters = document.getElementById('browseGenreFilters');
+    const btn = document.querySelector('.toggle-categories-btn');
+    const arrow = btn.querySelector('.category-arrow');
+    
+    if (filters.classList.contains('collapsed')) {
+        filters.classList.remove('collapsed');
+        arrow.textContent = '▲';
+    } else {
+        filters.classList.add('collapsed');
+        arrow.textContent = '▼';
+    }
+},
+
     getFilteredItems(items, type) {
         const filters = this.filters[type];
         let filtered = [...items];
@@ -730,6 +744,15 @@ const app = {
         content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
         
         await this.loadBrowseContent(1);
+		// Auto-collapse the category selector after selection
+const filters = document.getElementById('browseGenreFilters');
+const btn = document.querySelector('.toggle-categories-btn');
+const arrow = btn.querySelector('.category-arrow');
+
+if (filters && btn && arrow) {
+    filters.classList.add('collapsed');
+    arrow.textContent = '▼';
+}
     },
 
     async loadBrowseContent(page) {
