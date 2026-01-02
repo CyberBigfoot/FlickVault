@@ -750,6 +750,18 @@ header.header-hidden {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.detail-actions .trailer-btn {
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.detail-actions .trailer-btn:hover {
+    background: linear-gradient(135deg, #cc0000, #990000);
+    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
 .detail-close-btn {
     position: absolute;
     top: 15px;
