@@ -8,7 +8,6 @@ const app = {
     },
 
     async init() {
-        // Check for stored token - using sessionStorage instead for demo
         try {
             const token = sessionStorage.getItem('flickvault_token');
             const username = sessionStorage.getItem('flickvault_username');
@@ -34,7 +33,6 @@ const app = {
             if (e.key === 'Enter') this.search();
         });
 
-        // Auto-hide header on scroll
         this.initAutoHideHeader();
     },
 
@@ -154,7 +152,6 @@ const app = {
             const data = await res.json();
             this.vault = data;
             
-            // Ensure ratings exist
             this.vault.movies = this.vault.movies.map(m => ({ rating: 0, watched: false, ...m }));
             this.vault.shows = this.vault.shows.map(s => ({ rating: 0, watched: false, ...s }));
         } catch (err) {
@@ -254,14 +251,14 @@ const app = {
                 const runtime = item.Runtime;
                 const type = item.Type === 'movie' ? 'movie' : 'series';
                 
-                // Try to get TMDB ID for streaming providers
                 let providersHTML = '';
+                let tmdbId = null;
                 try {
                     const searchRes = await fetch(`/api/tmdb/search?query=${encodeURIComponent(title)}&type=${type}`);
                     const searchData = await searchRes.json();
                     
                     if (searchData.results && searchData.results.length > 0) {
-                        const tmdbId = searchData.results[0].id;
+                        tmdbId = searchData.results[0].id;
                         const providersRes = await fetch(`/api/tmdb/providers/${tmdbId}?type=${type}`);
                         const providersData = await providersRes.json();
                         
@@ -293,6 +290,7 @@ const app = {
                                 ` : ''}
                                 <div class="detail-actions">
                                     <button class="primary-btn" onclick="app.quickAdd('${imdbID}')">+ Add to Vault</button>
+                                    ${tmdbId ? `<button class="trailer-btn" onclick="app.openTrailer(${tmdbId}, '${type}', '${title.replace(/'/g, "\\'")}')">🎬 Watch Trailer</button>` : ''}
                                     <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
                                 </div>
                             </div>
@@ -396,7 +394,6 @@ const app = {
     clearFilters(type) {
         this.filters[type] = { search: '', watched: 'all', rating: 'all', genre: 'all', sort: 'recent' };
         
-        // Reset UI
         const prefix = type === 'movies' ? 'movie' : 'show';
         document.getElementById(`${prefix}FilterSearch`).value = '';
         document.getElementById(`${prefix}FilterWatched`).value = 'all';
@@ -406,26 +403,25 @@ const app = {
         
         this.renderVault();
     },
-	
-	toggleFilters(type) {
-    const content = document.getElementById(`${type}FiltersContent`);
-    const btn = event.target.closest('.toggle-filters-btn');
-    const arrow = btn.querySelector('.filter-arrow');
     
-    if (content.classList.contains('collapsed')) {
-        content.classList.remove('collapsed');
-        arrow.textContent = '▲';
-    } else {
-        content.classList.add('collapsed');
-        arrow.textContent = '▼';
-    }
-},
+    toggleFilters(type) {
+        const content = document.getElementById(`${type}FiltersContent`);
+        const btn = event.target.closest('.toggle-filters-btn');
+        const arrow = btn.querySelector('.filter-arrow');
+        
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            arrow.textContent = '▲';
+        } else {
+            content.classList.add('collapsed');
+            arrow.textContent = '▼';
+        }
+    },
 
     getFilteredItems(items, type) {
         const filters = this.filters[type];
         let filtered = [...items];
 
-        // Search filter
         if (filters.search) {
             const search = filters.search.toLowerCase();
             filtered = filtered.filter(item => 
@@ -434,27 +430,23 @@ const app = {
             );
         }
 
-        // Watched filter
         if (filters.watched !== 'all') {
             filtered = filtered.filter(item => 
                 filters.watched === 'watched' ? item.watched : !item.watched
             );
         }
 
-        // Rating filter
         if (filters.rating !== 'all') {
             const ratingValue = parseInt(filters.rating);
             filtered = filtered.filter(item => item.rating === ratingValue);
         }
 
-        // Genre filter
         if (filters.genre !== 'all') {
             filtered = filtered.filter(item => 
                 item.Genre && item.Genre.toLowerCase().includes(filters.genre.toLowerCase())
             );
         }
 
-        // Sort
         switch (filters.sort) {
             case 'recent':
                 filtered.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
@@ -491,7 +483,6 @@ const app = {
         const movieGenres = this.getAllGenres(this.vault.movies);
         const showGenres = this.getAllGenres(this.vault.shows);
         
-        // Update genre dropdowns
         this.updateGenreDropdown('movieFilterGenre', movieGenres);
         this.updateGenreDropdown('showFilterGenre', showGenres);
         
@@ -506,13 +497,11 @@ const app = {
         const select = document.getElementById(id);
         const currentValue = select.value;
         
-        // Keep "All Genres" and add new options
         const options = '<option value="all">All Genres</option>' + 
             genres.map(g => `<option value="${g}">${g}</option>`).join('');
         
         select.innerHTML = options;
         
-        // Restore previous selection if still valid
         if (genres.includes(currentValue)) {
             select.value = currentValue;
         }
@@ -531,10 +520,8 @@ const app = {
         content.innerHTML = '<div class="loading" style="padding:100px;"><div class="spinner"></div><p>Loading details...</p></div>';
         
         try {
-            // Fetch full details
             let fullItem = item;
             
-            // If it's an OMDb item, fetch fresh data
             if (!imdbID.startsWith('tmdb')) {
                 const res = await fetch(`/api/details/${imdbID}`);
                 fullItem = await res.json();
@@ -546,8 +533,8 @@ const app = {
             const runtime = fullItem.Runtime || (fullItem.runtime ? `${fullItem.runtime} min` : '');
             const mediaType = type === 'series' ? 'tv' : 'movie';
             
-            // Get streaming providers
             let providersHTML = '';
+            let finalTmdbId = null;
             try {
                 let tmdbId = null;
                 
@@ -561,6 +548,8 @@ const app = {
                     }
                 }
                 
+                finalTmdbId = tmdbId;
+                
                 if (tmdbId) {
                     const providersRes = await fetch(`/api/tmdb/providers/${tmdbId}?type=${mediaType}`);
                     const providersData = await providersRes.json();
@@ -573,7 +562,6 @@ const app = {
                 console.log('Could not fetch streaming providers:', err);
             }
             
-            // Get backdrop image if available from TMDB
             let backdropHTML = '';
             try {
                 let tmdbId = null;
@@ -619,6 +607,7 @@ const app = {
                             ` : ''}
                             <div class="detail-actions">
                                 <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
+                                ${finalTmdbId ? `<button class="trailer-btn" onclick="app.openTrailer(${finalTmdbId}, '${type}', '${title.replace(/'/g, "\\'")}')">🎬 Watch Trailer</button>` : ''}
                             </div>
                         </div>
                     </div>
@@ -817,7 +806,6 @@ const app = {
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
                 const runtime = item.runtime ? `${item.runtime} min` : (item.episode_run_time?.[0] ? `${item.episode_run_time[0]} min/ep` : '');
                 
-                // Fetch streaming providers
                 let providersHTML = '';
                 try {
                     const providersRes = await fetch(`/api/tmdb/providers/${tmdbId}?type=${type}`);
@@ -851,6 +839,7 @@ const app = {
                                 ` : ''}
                                 <div class="detail-actions">
                                     <button class="primary-btn" onclick="app.addFromTMDB(${tmdbId}, '${type}')">+ Add to Vault</button>
+                                    <button class="trailer-btn" onclick="app.openTrailer(${tmdbId}, '${type}', '${title.replace(/'/g, "\\'")}')">🎬 Watch Trailer</button>
                                     <button class="secondary-btn" onclick="app.closeDetailModal()">Close</button>
                                 </div>
                             </div>
@@ -868,6 +857,30 @@ const app = {
         } catch (err) {
             console.error('Detail error:', err);
             content.innerHTML = '<div style="padding:100px;text-align:center;color:#aaa;">Error loading details</div>';
+        }
+    },
+
+    async openTrailer(tmdbId, mediaType, title) {
+        try {
+            const type = mediaType === 'tv' || mediaType === 'series' ? 'tv' : 'movie';
+            const res = await fetch(`/api/tmdb/videos/${tmdbId}?type=${type}`);
+            const data = await res.json();
+            
+            const trailer = data.results?.find(v => 
+                v.site === 'YouTube' && 
+                (v.type === 'Trailer' || v.type === 'Teaser')
+            );
+            
+            if (trailer) {
+                window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
+            } else {
+                const searchQuery = encodeURIComponent(`${title} official trailer`);
+                window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank');
+            }
+        } catch (err) {
+            console.error('Trailer error:', err);
+            const searchQuery = encodeURIComponent(`${title} official trailer`);
+            window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank');
         }
     },
 
@@ -946,7 +959,7 @@ const app = {
 
         this.recommendPage = 1;
         this.recommendLoading = false;
-
+        
         const div = document.getElementById('recommendResults');
         div.innerHTML = '<div class="loading"><div class="spinner"></div><p>Analyzing your vault...</p></div>';
         
@@ -974,7 +987,7 @@ const app = {
                     <div class="content-card" onclick="app.showDetailModal(${item.id}, '${item.media_type || 'movie'}')">
                         <span class="media-badge ${item.media_type === 'tv' ? 'tv' : ''}">${item.media_type === 'tv' ? 'TV' : 'Movie'}</span>
                         <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
-                             alt="${item.title}"
+                             alt="${item.title || item.name}"
                              onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
                         <div class="content-card-info">
                             <div class="content-card-title">${item.title || item.name}</div>
@@ -1041,11 +1054,11 @@ const app = {
                     <div class="content-card" onclick="app.showDetailModal(${item.id}, '${item.media_type || 'movie'}')">
                         <span class="media-badge ${item.media_type === 'tv' ? 'tv' : ''}">${item.media_type === 'tv' ? 'TV' : 'Movie'}</span>
                         <img src="https://image.tmdb.org/t/p/w500${item.poster_path}" 
-                             alt="${item.title}"
+                             alt="${item.title || item.name}"
                              onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
                         <div class="content-card-info">
                             <div class="content-card-title">${item.title || item.name}</div>
-                            <div class="content-card-year">${(item.release_date || item.first_air_date || '')?.split('-')[0] || 'N/A'}</div>
+                            <div class="content-card-year">${(item.release_date || item.first_air_date || '').split('-')[0] || 'N/A'}</div>
                         </div>
                     </div>
                 `).join('');
@@ -1114,212 +1127,205 @@ const app = {
     },
 
     showAnalytics() {
-    const movies = this.vault.movies;
-    const shows = this.vault.shows;
-    const allItems = [...movies, ...shows];
-    
-    if (allItems.length === 0) {
-        this.showToast('⚠️ Add items to see analytics');
-        return;
-    }
-
-    document.getElementById('analyticsModal').classList.add('active');
-    
-    // Calculate analytics
-    const totalItems = allItems.length;
-    const watchedItems = allItems.filter(i => i.watched).length;
-    const watchRate = ((watchedItems / totalItems) * 100).toFixed(1);
-    
-    const ratedItems = allItems.filter(i => i.rating > 0);
-    const avgRating = ratedItems.length > 0 
-        ? (ratedItems.reduce((sum, i) => sum + i.rating, 0) / ratedItems.length).toFixed(1)
-        : 0;
-    const fiveStarCount = allItems.filter(i => i.rating === 5).length;
-    
-    // Calculate total runtime (for movies)
-    let totalRuntime = 0;
-    movies.forEach(m => {
-        if (m.Runtime && m.Runtime !== 'N/A') {
-            const minutes = parseInt(m.Runtime.replace(/\D/g, ''));
-            if (!isNaN(minutes)) totalRuntime += minutes;
-        }
-    });
-    const runtimeHours = Math.floor(totalRuntime / 60);
-    const runtimeMinutes = totalRuntime % 60;
-    
-    // Genre analysis
-    const genreCount = {};
-    allItems.forEach(item => {
-        if (item.Genre && item.Genre !== 'N/A') {
-            item.Genre.split(',').forEach(g => {
-                const genre = g.trim();
-                genreCount[genre] = (genreCount[genre] || 0) + 1;
-            });
-        }
-    });
-    
-    const topGenres = Object.entries(genreCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-    const maxGenreCount = topGenres[0] ? topGenres[0][1] : 1;
-    
-    // Year analysis
-    const yearCount = {};
-    allItems.forEach(item => {
-        if (item.Year && item.Year !== 'N/A') {
-            const year = item.Year.split('–')[0]; // Handle TV shows with year ranges
-            yearCount[year] = (yearCount[year] || 0) + 1;
-        }
-    });
-    
-    const topYears = Object.entries(yearCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-    
-    // Decade analysis
-    const decadeCount = {};
-    allItems.forEach(item => {
-        if (item.Year && item.Year !== 'N/A') {
-            const year = parseInt(item.Year.split('–')[0]);
-            if (!isNaN(year)) {
-                const decade = Math.floor(year / 10) * 10;
-                decadeCount[`${decade}s`] = (decadeCount[`${decade}s`] || 0) + 1;
-            }
-        }
-    });
-    
-    const topDecades = Object.entries(decadeCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-    
-    // Rating distribution
-    const movieRatings = [0, 0, 0, 0, 0];
-    const showRatings = [0, 0, 0, 0, 0];
-    
-    movies.forEach(m => {
-        if (m.rating > 0) movieRatings[m.rating - 1]++;
-    });
-    
-    shows.forEach(s => {
-        if (s.rating > 0) showRatings[s.rating - 1]++;
-    });
-    
-    // Generate HTML
-    document.getElementById('analyticsContent').innerHTML = `
-        <div class="analytics-card full-width">
-            <h3>📊 Collection Overview</h3>
-            <div class="overview-stats">
-                <div class="overview-item">
-                    <div class="overview-number">${totalItems}</div>
-                    <div class="overview-label">Total Items</div>
-                </div>
-                <div class="overview-item">
-                    <div class="overview-number">${movies.length}</div>
-                    <div class="overview-label">Movies</div>
-                </div>
-                <div class="overview-item">
-                    <div class="overview-number">${shows.length}</div>
-                    <div class="overview-label">TV Shows</div>
-                </div>
-                <div class="overview-item">
-                    <div class="overview-number">${watchRate}%</div>
-                    <div class="overview-label">Watch Rate</div>
-                </div>
-                <div class="overview-item">
-                    <div class="overview-number">${avgRating}</div>
-                    <div class="overview-label">Avg Rating</div>
-                </div>
-                <div class="overview-item">
-                    <div class="overview-number">${fiveStarCount}</div>
-                    <div class="overview-label">5-Star Items</div>
-                </div>
-                ${totalRuntime > 0 ? `
-                    <div class="overview-item">
-                        <div class="overview-number">${runtimeHours}h ${runtimeMinutes}m</div>
-                        <div class="overview-label">Total Runtime</div>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
+        const movies = this.vault.movies;
+        const shows = this.vault.shows;
+        const allItems = [...movies, ...shows];
         
-        <div class="analytics-grid">
-            <div class="analytics-card">
-                <h3>🎭 Top Genres</h3>
-                ${topGenres.length > 0 ? topGenres.map(([genre, count]) => `
-                    <div style="margin-bottom: 15px;">
+        if (allItems.length === 0) {
+            this.showToast('⚠️ Add items to see analytics');
+            return;
+        }
+
+        document.getElementById('analyticsModal').classList.add('active');
+        
+        const totalItems = allItems.length;
+        const watchedItems = allItems.filter(i => i.watched).length;
+        const watchRate = ((watchedItems / totalItems) * 100).toFixed(1);
+        
+        const ratedItems = allItems.filter(i => i.rating > 0);
+        const avgRating = ratedItems.length > 0 
+            ? (ratedItems.reduce((sum, i) => sum + i.rating, 0) / ratedItems.length).toFixed(1)
+            : 0;
+        const fiveStarCount = allItems.filter(i => i.rating === 5).length;
+        
+        let totalRuntime = 0;
+        movies.forEach(m => {
+            if (m.Runtime && m.Runtime !== 'N/A') {
+                const minutes = parseInt(m.Runtime.replace(/\D/g, ''));
+                if (!isNaN(minutes)) totalRuntime += minutes;
+            }
+        });
+        const runtimeHours = Math.floor(totalRuntime / 60);
+        const runtimeMinutes = totalRuntime % 60;
+        
+        const genreCount = {};
+        allItems.forEach(item => {
+            if (item.Genre && item.Genre !== 'N/A') {
+                item.Genre.split(',').forEach(g => {
+                    const genre = g.trim();
+                    genreCount[genre] = (genreCount[genre] || 0) + 1;
+                });
+            }
+        });
+        
+        const topGenres = Object.entries(genreCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        const maxGenreCount = topGenres[0] ? topGenres[0][1] : 1;
+        
+        const yearCount = {};
+        allItems.forEach(item => {
+            if (item.Year && item.Year !== 'N/A') {
+                const year = item.Year.split('–')[0];
+                yearCount[year] = (yearCount[year] || 0) + 1;
+            }
+        });
+        
+        const topYears = Object.entries(yearCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        const decadeCount = {};
+        allItems.forEach(item => {
+            if (item.Year && item.Year !== 'N/A') {
+                const year = parseInt(item.Year.split('–')[0]);
+                if (!isNaN(year)) {
+                    const decade = Math.floor(year / 10) * 10;
+                    decadeCount[`${decade}s`] = (decadeCount[`${decade}s`] || 0) + 1;
+                }
+            }
+        });
+        
+        const topDecades = Object.entries(decadeCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        const movieRatings = [0, 0, 0, 0, 0];
+        const showRatings = [0, 0, 0, 0, 0];
+        
+        movies.forEach(m => {
+            if (m.rating > 0) movieRatings[m.rating - 1]++;
+        });
+        
+        shows.forEach(s => {
+            if (s.rating > 0) showRatings[s.rating - 1]++;
+        });
+        
+        document.getElementById('analyticsContent').innerHTML = `
+            <div class="analytics-card full-width">
+                <h3>📊 Collection Overview</h3>
+                <div class="overview-stats">
+                    <div class="overview-item">
+                        <div class="overview-number">${totalItems}</div>
+                        <div class="overview-label">Total Items</div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-number">${movies.length}</div>
+                        <div class="overview-label">Movies</div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-number">${shows.length}</div>
+                        <div class="overview-label">TV Shows</div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-number">${watchRate}%</div>
+                        <div class="overview-label">Watch Rate</div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-number">${avgRating}</div>
+                        <div class="overview-label">Avg Rating</div>
+                    </div>
+                    <div class="overview-item">
+                        <div class="overview-number">${fiveStarCount}</div>
+                        <div class="overview-label">5-Star Items</div>
+                    </div>
+                    ${totalRuntime > 0 ? `
+                        <div class="overview-item">
+                            <div class="overview-number">${runtimeHours}h ${runtimeMinutes}m</div>
+                            <div class="overview-label">Total Runtime</div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3>🎭 Top Genres</h3>
+                    ${topGenres.length > 0 ? topGenres.map(([genre, count]) => `
+                        <div style="margin-bottom: 15px;">
+                            <div class="analytics-item">
+                                <span class="analytics-label">${genre}</span>
+                                <span class="analytics-value">${count}</span>
+                            </div>
+                            <div class="genre-bar">
+                                <div class="genre-bar-fill" style="width: ${(count / maxGenreCount) * 100}%"></div>
+                            </div>
+                        </div>
+                    `).join('') : '<p style="color:rgba(255,255,255,0.5);">No genre data available</p>'}
+                </div>
+                
+                <div class="analytics-card">
+                    <h3>📅 Top Years</h3>
+                    ${topYears.length > 0 ? topYears.map(([year, count]) => `
                         <div class="analytics-item">
-                            <span class="analytics-label">${genre}</span>
+                            <span class="analytics-label">${year}</span>
+                            <span class="analytics-value">${count} items</span>
+                        </div>
+                    `).join('') : '<p style="color:rgba(255,255,255,0.5);">No year data available</p>'}
+                </div>
+                
+                <div class="analytics-card">
+                    <h3>📆 Top Decades</h3>
+                    ${topDecades.length > 0 ? topDecades.map(([decade, count]) => `
+                        <div class="analytics-item">
+                            <span class="analytics-label">${decade}</span>
+                            <span class="analytics-value">${count} items</span>
+                        </div>
+                    `).join('') : '<p style="color:rgba(255,255,255,0.5);">No decade data available</p>'}
+                </div>
+                
+                <div class="analytics-card">
+                    <h3>⭐ Movie Rating Distribution</h3>
+                    ${movieRatings.some(r => r > 0) ? movieRatings.map((count, index) => `
+                        <div class="analytics-item">
+                            <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
                             <span class="analytics-value">${count}</span>
                         </div>
-                        <div class="genre-bar">
-                            <div class="genre-bar-fill" style="width: ${(count / maxGenreCount) * 100}%"></div>
+                    `).join('') : '<p style="color:rgba(255,255,255,0.5);">No movie ratings yet</p>'}
+                </div>
+                
+                <div class="analytics-card">
+                    <h3>⭐ TV Show Rating Distribution</h3>
+                    ${showRatings.some(r => r > 0) ? showRatings.map((count, index) => `
+                        <div class="analytics-item">
+                            <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
+                            <span class="analytics-value">${count}</span>
                         </div>
-                    </div>
-                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No genre data available</p>'}
-            </div>
-            
-            <div class="analytics-card">
-                <h3>📅 Top Years</h3>
-                ${topYears.length > 0 ? topYears.map(([year, count]) => `
-                    <div class="analytics-item">
-                        <span class="analytics-label">${year}</span>
-                        <span class="analytics-value">${count} items</span>
-                    </div>
-                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No year data available</p>'}
-            </div>
-            
-            <div class="analytics-card">
-                <h3>📆 Top Decades</h3>
-                ${topDecades.length > 0 ? topDecades.map(([decade, count]) => `
-                    <div class="analytics-item">
-                        <span class="analytics-label">${decade}</span>
-                        <span class="analytics-value">${count} items</span>
-                    </div>
-                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No decade data available</p>'}
-            </div>
-            
-            <div class="analytics-card">
-                <h3>⭐ Movie Rating Distribution</h3>
-                ${movieRatings.some(r => r > 0) ? movieRatings.map((count, index) => `
-                    <div class="analytics-item">
-                        <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
-                        <span class="analytics-value">${count}</span>
-                    </div>
-                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No movie ratings yet</p>'}
-            </div>
-            
-            <div class="analytics-card">
-                <h3>⭐ TV Show Rating Distribution</h3>
-                ${showRatings.some(r => r > 0) ? showRatings.map((count, index) => `
-                    <div class="analytics-item">
-                        <span class="analytics-label">${'★'.repeat(index + 1)}${'☆'.repeat(4 - index)}</span>
-                        <span class="analytics-value">${count}</span>
-                    </div>
-                `).join('') : '<p style="color:rgba(255,255,255,0.5);">No TV show ratings yet</p>'}
-            </div>
-            
-            <div class="analytics-card">
-                <h3>✅ Watch Status</h3>
-                <div class="analytics-item">
-                    <span class="analytics-label">Watched</span>
-                    <span class="analytics-value">${watchedItems} (${watchRate}%)</span>
+                    `).join('') : '<p style="color:rgba(255,255,255,0.5);">No TV show ratings yet</p>'}
                 </div>
-                <div class="analytics-item">
-                    <span class="analytics-label">Unwatched</span>
-                    <span class="analytics-value">${totalItems - watchedItems} (${(100 - watchRate).toFixed(1)}%)</span>
-                </div>
-                <div class="analytics-item">
-                    <span class="analytics-label">Watched Movies</span>
-                    <span class="analytics-value">${movies.filter(m => m.watched).length}</span>
-                </div>
-                <div class="analytics-item">
-                    <span class="analytics-label">Watched Shows</span>
-                    <span class="analytics-value">${shows.filter(s => s.watched).length}</span>
+                
+                <div class="analytics-card">
+                    <h3>✅ Watch Status</h3>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Watched</span>
+                        <span class="analytics-value">${watchedItems} (${watchRate}%)</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Unwatched</span>
+                        <span class="analytics-value">${totalItems - watchedItems} (${(100 - watchRate).toFixed(1)}%)</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Watched Movies</span>
+                        <span class="analytics-value">${movies.filter(m => m.watched).length}</span>
+                    </div>
+                    <div class="analytics-item">
+                        <span class="analytics-label">Watched Shows</span>
+                        <span class="analytics-value">${shows.filter(s => s.watched).length}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-},
+        `;
+    },
 
     closeAnalytics() {
         document.getElementById('analyticsModal').classList.remove('active');
@@ -1361,6 +1367,44 @@ const app = {
         a.click();
         URL.revokeObjectURL(url);
         this.showToast('📥 Data exported!');
+    },
+
+    importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const res = await fetch(`/api/vault/${this.username}/import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: event.target.result })
+                    });
+                    
+                    const result = await res.json();
+                    
+                    if (result.success) {
+                        await this.loadVault();
+                        this.renderVault();
+                        this.updateStats();
+                        this.closeSettings();
+                        this.showToast(`📤 Imported ${result.imported} items!`);
+                    } else {
+                        this.showToast('❌ Import failed');
+                    }
+                } catch (err) {
+                    console.error('Import error:', err);
+                    this.showToast('❌ Error importing data');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
     },
 
     async clearAllData() {
