@@ -36,12 +36,18 @@
         </div>
     </div>
 
-    <div id="browseModal" class="modal">
-        <div class="modal-content wide">
-            <button class="close-btn" onclick="app.closeBrowse()">×</button>
-            <h2>Browse Popular Content</h2>
-            
-            <div class="genre-filters">
+    <!-- Replace the existing browseModal section in index.html with this -->
+<div id="browseModal" class="modal">
+    <div class="modal-content wide">
+        <button class="close-btn" onclick="app.closeBrowse()">×</button>
+        <h2>Browse Popular Content</h2>
+        
+        <div class="browse-categories-wrapper">
+            <button class="toggle-categories-btn" onclick="app.toggleBrowseCategories()">
+                🎬 Select Genre
+                <span class="category-arrow">▼</span>
+            </button>
+            <div class="genre-filters collapsed" id="browseGenreFilters">
                 <button class="genre-filter active" onclick="app.filterBrowse('all')">🎬 All</button>
                 <button class="genre-filter" onclick="app.filterBrowse('action')">💥 Action</button>
                 <button class="genre-filter" onclick="app.filterBrowse('comedy')">😂 Comedy</button>
@@ -57,12 +63,13 @@
                 <button class="genre-filter" onclick="app.filterBrowse('family')">👨‍👩‍👧‍👦 Family</button>
                 <button class="genre-filter" onclick="app.filterBrowse('mystery')">🔍 Mystery</button>
             </div>
-            
-            <div class="scroll-container">
-                <div id="browseContent"></div>
-            </div>
+        </div>
+        
+        <div class="scroll-container">
+            <div id="browseContent"></div>
         </div>
     </div>
+</div>
 
     <div id="detailModal" class="detail-modal">
         <div class="detail-content" id="detailModalContent">
