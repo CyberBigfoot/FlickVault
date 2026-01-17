@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>FlickVault</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="apple-touch-icon.png?v=4" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+    <link rel="manifest" href="manifest.json?v=4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FlickVault">
 </head>
+
 <body>
     <header>
         <div class="header-content">
@@ -15,7 +23,7 @@
                 <button id="registerBtn" onclick="app.showRegister()">Register</button>
                 <button id="browseBtn" class="hidden" onclick="app.showBrowse()">Browse</button>
                 <button id="recommendBtn" class="hidden" onclick="app.showRecommendations()">Recommend</button>
-                <button id="analyticsBtn" class="hidden" onclick="app.showAnalytics()">Analytics</button>
+                <button id="analyticsBtn" class="hidden" onclick="app.showAnalytics()">📊 Analytics</button>
                 <button id="settingsBtn" class="hidden" onclick="app.showSettings()">Settings</button>
                 <button id="logoutBtn" class="hidden" onclick="app.logout()">Logout</button>
             </div>
@@ -36,40 +44,65 @@
         </div>
     </div>
 
-    <!-- Replace the existing browseModal section in index.html with this -->
-<div id="browseModal" class="modal">
-    <div class="modal-content wide">
-        <button class="close-btn" onclick="app.closeBrowse()">×</button>
-        <h2>Browse Popular Content</h2>
-        
-        <div class="browse-categories-wrapper">
-            <button class="toggle-categories-btn" onclick="app.toggleBrowseCategories()">
-                🎬 Select Genre
-                <span class="category-arrow">▼</span>
+    <!-- Full-Screen Browse Page (Jellyseerr Style) -->
+    <div id="browsePage" class="browse-page">
+        <div class="browse-header">
+            <button class="browse-back-btn" onclick="app.closeBrowse()">
+                <span>←</span> Back
             </button>
-            <div class="genre-filters collapsed" id="browseGenreFilters">
-                <button class="genre-filter active" onclick="app.filterBrowse('all')">🎬 All</button>
-                <button class="genre-filter" onclick="app.filterBrowse('action')">💥 Action</button>
-                <button class="genre-filter" onclick="app.filterBrowse('comedy')">😂 Comedy</button>
-                <button class="genre-filter" onclick="app.filterBrowse('drama')">🎭 Drama</button>
-                <button class="genre-filter" onclick="app.filterBrowse('horror')">👻 Horror</button>
-                <button class="genre-filter" onclick="app.filterBrowse('romance')">❤️ Romance</button>
-                <button class="genre-filter" onclick="app.filterBrowse('thriller')">🔪 Thriller</button>
-                <button class="genre-filter" onclick="app.filterBrowse('scifi')">🚀 Sci-Fi</button>
-                <button class="genre-filter" onclick="app.filterBrowse('fantasy')">🧙 Fantasy</button>
-                <button class="genre-filter" onclick="app.filterBrowse('animation')">🎨 Animation</button>
-                <button class="genre-filter" onclick="app.filterBrowse('crime')">🕵️ Crime</button>
-                <button class="genre-filter" onclick="app.filterBrowse('documentary')">🎞️ Documentary</button>
-                <button class="genre-filter" onclick="app.filterBrowse('family')">👨‍👩‍👧‍👦 Family</button>
-                <button class="genre-filter" onclick="app.filterBrowse('mystery')">🔍 Mystery</button>
+            <div class="browse-logo">🎬 FlickVault Browse</div>
+        </div>
+
+
+        <!-- Hero Section -->
+        <div id="browse-hero" class="browse-hero">
+            <div class="hero-loading">
+                <div class="spinner"></div>
+                <p>Loading featured content...</p>
             </div>
         </div>
-        
-        <div class="scroll-container">
-            <div id="browseContent"></div>
+
+        <!-- Genre Filter Bar -->
+        <div class="browse-genre-bar">
+            <button class="browse-genre-btn active" onclick="app.filterBrowseByGenre('all')">All</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('action')">Action</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('comedy')">Comedy</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('drama')">Drama</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('horror')">Horror</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('scifi')">Sci-Fi</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('thriller')">Thriller</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('romance')">Romance</button>
+            <button class="browse-genre-btn" onclick="app.filterBrowseByGenre('animation')">Animation</button>
+        </div>
+
+
+        <!-- Genre Results Row (Hidden by default) -->
+        <div id="genre-results-row" class="browse-row" style="display:none;"></div>
+
+        <!-- Content Rows -->
+        <div class="browse-content">
+            <div id="trending-row" class="browse-row"></div>
+            <div id="popular-movies-row" class="browse-row"></div>
+            <div id="popular-tv-row" class="browse-row"></div>
+            <div id="top-movies-row" class="browse-row"></div>
+            <div id="top-tv-row" class="browse-row"></div>
+        </div>
+
+        <!-- Show All Category View -->
+        <div id="showAllPanel" class="show-all-panel">
+            <div class="show-all-header">
+                <button class="show-all-back-btn" onclick="app.closeShowAll()">
+                    <span>←</span> Back to Browse
+                </button>
+                <h2 id="showAllTitle" class="show-all-title">Category</h2>
+            </div>
+            <div id="showAllGrid" class="show-all-grid"></div>
+            <div id="showAllLoading" class="show-all-loading hidden">
+                <div class="spinner"></div>
+                <p>Loading more...</p>
+            </div>
         </div>
     </div>
-</div>
 
     <div id="detailModal" class="detail-modal">
         <div class="detail-content" id="detailModalContent">
@@ -77,35 +110,72 @@
         </div>
     </div>
 
-    <div id="recommendModal" class="modal">
-        <div class="modal-content wide">
-            <button class="close-btn" onclick="app.closeRecommendations()">×</button>
-            <h2>Get Recommendations</h2>
-            <div class="recommend-tabs">
-                <button class="tab-btn active" data-tab="vault" onclick="app.switchRecommendTab('vault')">My Vault</button>
-                <button class="tab-btn" data-tab="custom" onclick="app.switchRecommendTab('custom')">Custom Match</button>
+    <!-- Full-Screen Recommendations Page -->
+    <div id="recommendationsPage" class="browse-page">
+        <div class="browse-header">
+            <button class="browse-back-btn" onclick="app.closeRecommendationsPage()">
+                <span>←</span> Back
+            </button>
+            <div class="browse-logo">🎬 Recommendations</div>
+        </div>
+
+        <div class="recommend-hero">
+            <div class="hero-content">
+                <h1 class="hero-title">Find Your Next Favorite</h1>
+                <div class="recommend-tabs">
+                    <button class="tab-btn active" data-tab="vault" id="tabVault"
+                        onclick="app.switchRecommendTab('vault')">My Vault</button>
+                    <button class="tab-btn" data-tab="custom" id="tabCustom"
+                        onclick="app.switchRecommendTab('custom')">Custom Match</button>
+                </div>
+
+                <div id="vaultRecommendSection" class="recommend-input-section">
+                    <p class="hero-overview">Get tailored suggestions based on what's in your vault. We filter out what
+                        you already have!</p>
+                    <button class="hero-btn primary" onclick="app.getVaultRecommendations()">✨ Suggest from
+                        Vault</button>
+                </div>
+
+                <div id="customRecommendSection" class="recommend-input-section hidden">
+                    <p class="hero-overview">Mix any two titles (Movie/TV) and we'll find something that blends both
+                        worlds.</p>
+                    <div class="custom-input-group">
+                        <input type="text" id="recommend1" placeholder="First title (e.g., Inception)...">
+                        <input type="text" id="recommend2" placeholder="Second title (e.g., Breaking Bad)...">
+                    </div>
+                    <button class="hero-btn primary" onclick="app.getCustomRecommendations()">🔥 Find Matches</button>
+                </div>
             </div>
-            <div id="vaultRecommendSection">
-                <p class="info-text">Get recommendations based on your vault's genres and preferences</p>
-                <button class="action-btn" onclick="app.getVaultRecommendations()">Get Recommendations</button>
-            </div>
-            <div id="customRecommendSection" class="hidden">
-                <p class="info-text">Enter two titles you like for personalized recommendations</p>
-                <input type="text" id="recommend1" placeholder="First title...">
-                <input type="text" id="recommend2" placeholder="Second title...">
-                <button class="action-btn" onclick="app.getCustomRecommendations()">Find Matches</button>
-            </div>
-            <div class="scroll-container">
-                <div id="recommendResults"></div>
-            </div>
+        </div>
+
+        <div id="recommendResultsGrid" class="show-all-grid">
+            <!-- Results will appear here -->
+        </div>
+
+        <div id="recommendLoading" class="show-all-loading hidden">
+            <div class="spinner"></div>
+            <p>Finding more matches...</p>
         </div>
     </div>
 
-    <div id="analyticsModal" class="modal">
-        <div class="modal-content wide">
-            <button class="close-btn" onclick="app.closeAnalytics()">×</button>
-            <h2>📊 Analytics Dashboard</h2>
-            <div id="analyticsContent"></div>
+    <!-- Full-Screen Analytics Page -->
+    <div id="statsPage" class="browse-page">
+        <div class="browse-header">
+            <button class="browse-back-btn" onclick="app.closeAnalyticsPage()">
+                <span>←</span> Back to Vault
+            </button>
+            <div class="browse-logo">📊 Detailed Analytics</div>
+        </div>
+
+        <div class="stats-hero">
+            <div class="hero-content">
+                <h1 class="hero-title" id="statsUserTitle">Your Vault Insights</h1>
+                <p class="hero-overview">A deep dive into your watching habits and collection statistics.</p>
+            </div>
+        </div>
+
+        <div id="analyticsContent" class="analytics-page-content">
+            <!-- Analytics content loads here -->
         </div>
     </div>
 
@@ -160,96 +230,84 @@
             </div>
 
             <!-- Movie Filters -->
-<div id="moviesFilters" class="filters-wrapper">
-    <button class="toggle-filters-btn" onclick="app.toggleFilters('movies')">
-        🔍 Filter & Sort
-        <span class="filter-arrow">▼</span>
-    </button>
-    <div class="filters-section collapsed" id="moviesFiltersContent">
-        <div class="filters-header">
-            <h3>🔍 Filter & Sort</h3>
-            <button class="clear-filters-btn" onclick="app.clearFilters('movies')">Clear Filters</button>
-        </div>
-        <div class="filters-grid">
-            <input type="text" 
-                   id="movieFilterSearch" 
-                   placeholder="Search by title or genre..." 
-                   oninput="app.updateFilter('movies', 'search', this.value)">
-            
-            <select id="movieFilterWatched" onchange="app.updateFilter('movies', 'watched', this.value)">
-                <option value="all">All Status</option>
-                <option value="watched">Watched</option>
-                <option value="unwatched">Unwatched</option>
-            </select>
-            
-            <select id="movieFilterRating" onchange="app.updateFilter('movies', 'rating', this.value)">
-                <option value="all">All Ratings</option>
-                <option value="5">★★★★★ (5 stars)</option>
-                <option value="4">★★★★☆ (4 stars)</option>
-                <option value="3">★★★☆☆ (3 stars)</option>
-                <option value="2">★★☆☆☆ (2 stars)</option>
-                <option value="1">★☆☆☆☆ (1 star)</option>
-            </select>
-            
-            <select id="movieFilterGenre" onchange="app.updateFilter('movies', 'genre', this.value)">
-                <option value="all">All Genres</option>
-            </select>
-            
-            <select id="movieFilterSort" onchange="app.updateFilter('movies', 'sort', this.value)">
-                <option value="recent">Recently Added</option>
-                <option value="title">Title (A-Z)</option>
-                <option value="year">Year (Newest)</option>
-                <option value="rating">My Rating</option>
-            </select>
-        </div>
-    </div>
-</div>
+            <div id="moviesFilters" class="filters-wrapper">
+                <button class="toggle-filters-btn" onclick="app.toggleFilters('movies')">
+                    🔍 Filter & Sort
+                    <span class="filter-arrow">▼</span>
+                </button>
+                <div class="filters-section collapsed" id="moviesFiltersContent">
+                    <div class="filters-header">
+                        <h3>🔍 Filter & Sort</h3>
+                        <button class="clear-filters-btn" onclick="app.clearFilters('movies')">Clear Filters</button>
+                    </div>
+                    <div class="filters-grid">
+                        <input type="text" id="movieFilterSearch" placeholder="Search by title or genre..."
+                            oninput="app.updateFilter('movies', 'search', this.value)">
+                        <select id="movieFilterWatched" onchange="app.updateFilter('movies', 'watched', this.value)">
+                            <option value="all">All Status</option>
+                            <option value="watched">Watched</option>
+                            <option value="unwatched">Unwatched</option>
+                        </select>
+                        <select id="movieFilterRating" onchange="app.updateFilter('movies', 'rating', this.value)">
+                            <option value="all">All Ratings</option>
+                            <option value="5">★★★★★ (5 stars)</option>
+                            <option value="4">★★★★☆ (4 stars)</option>
+                            <option value="3">★★★☆☆ (3 stars)</option>
+                            <option value="2">★★☆☆☆ (2 stars)</option>
+                            <option value="1">★☆☆☆☆ (1 star)</option>
+                        </select>
+                        <select id="movieFilterGenre" onchange="app.updateFilter('movies', 'genre', this.value)">
+                            <option value="all">All Genres</option>
+                        </select>
+                        <select id="movieFilterSort" onchange="app.updateFilter('movies', 'sort', this.value)">
+                            <option value="recent">Recently Added</option>
+                            <option value="title">Title (A-Z)</option>
+                            <option value="year">Year (Newest)</option>
+                            <option value="rating">My Rating</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
-<!-- TV Show Filters -->
-<div id="showsFilters" class="filters-wrapper hidden">
-    <button class="toggle-filters-btn" onclick="app.toggleFilters('shows')">
-        🔍 Filter & Sort
-        <span class="filter-arrow">▼</span>
-    </button>
-    <div class="filters-section collapsed" id="showsFiltersContent">
-        <div class="filters-header">
-            <h3>🔍 Filter & Sort</h3>
-            <button class="clear-filters-btn" onclick="app.clearFilters('shows')">Clear Filters</button>
-        </div>
-        <div class="filters-grid">
-            <input type="text" 
-                   id="showFilterSearch" 
-                   placeholder="Search by title or genre..." 
-                   oninput="app.updateFilter('shows', 'search', this.value)">
-            
-            <select id="showFilterWatched" onchange="app.updateFilter('shows', 'watched', this.value)">
-                <option value="all">All Status</option>
-                <option value="watched">Watched</option>
-                <option value="unwatched">Unwatched</option>
-            </select>
-            
-            <select id="showFilterRating" onchange="app.updateFilter('shows', 'rating', this.value)">
-                <option value="all">All Ratings</option>
-                <option value="5">★★★★★ (5 stars)</option>
-                <option value="4">★★★★☆ (4 stars)</option>
-                <option value="3">★★★☆☆ (3 stars)</option>
-                <option value="2">★★☆☆☆ (2 stars)</option>
-                <option value="1">★☆☆☆☆ (1 star)</option>
-            </select>
-            
-            <select id="showFilterGenre" onchange="app.updateFilter('shows', 'genre', this.value)">
-                <option value="all">All Genres</option>
-            </select>
-            
-            <select id="showFilterSort" onchange="app.updateFilter('shows', 'sort', this.value)">
-                <option value="recent">Recently Added</option>
-                <option value="title">Title (A-Z)</option>
-                <option value="year">Year (Newest)</option>
-                <option value="rating">My Rating</option>
-            </select>
-        </div>
-    </div>
-</div>
+            <!-- TV Show Filters -->
+            <div id="showsFilters" class="filters-wrapper hidden">
+                <button class="toggle-filters-btn" onclick="app.toggleFilters('shows')">
+                    🔍 Filter & Sort
+                    <span class="filter-arrow">▼</span>
+                </button>
+                <div class="filters-section collapsed" id="showsFiltersContent">
+                    <div class="filters-header">
+                        <h3>🔍 Filter & Sort</h3>
+                        <button class="clear-filters-btn" onclick="app.clearFilters('shows')">Clear Filters</button>
+                    </div>
+                    <div class="filters-grid">
+                        <input type="text" id="showFilterSearch" placeholder="Search by title or genre..."
+                            oninput="app.updateFilter('shows', 'search', this.value)">
+                        <select id="showFilterWatched" onchange="app.updateFilter('shows', 'watched', this.value)">
+                            <option value="all">All Status</option>
+                            <option value="watched">Watched</option>
+                            <option value="unwatched">Unwatched</option>
+                        </select>
+                        <select id="showFilterRating" onchange="app.updateFilter('shows', 'rating', this.value)">
+                            <option value="all">All Ratings</option>
+                            <option value="5">★★★★★ (5 stars)</option>
+                            <option value="4">★★★★☆ (4 stars)</option>
+                            <option value="3">★★★☆☆ (3 stars)</option>
+                            <option value="2">★★☆☆☆ (2 stars)</option>
+                            <option value="1">★☆☆☆☆ (1 star)</option>
+                        </select>
+                        <select id="showFilterGenre" onchange="app.updateFilter('shows', 'genre', this.value)">
+                            <option value="all">All Genres</option>
+                        </select>
+                        <select id="showFilterSort" onchange="app.updateFilter('shows', 'sort', this.value)">
+                            <option value="recent">Recently Added</option>
+                            <option value="title">Title (A-Z)</option>
+                            <option value="year">Year (Newest)</option>
+                            <option value="rating">My Rating</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
             <div id="moviesVault"></div>
             <div id="showsVault" class="hidden"></div>
@@ -260,4 +318,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
