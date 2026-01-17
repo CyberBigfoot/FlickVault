@@ -6,37 +6,37 @@ A modern, Netflix-inspired personal movie and TV show collection manager with us
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-orange.svg)](https://buymeacoffee.com/onlycyber)
+
 ## ✨ Features
 
 - 🔐 **User Authentication** - Secure personal vaults with file-based storage
-- 🔍 **Smart Search** - Search movies and TV shows using OMDb and TMDB APIs
+- 🔍 **Smart Search** - Search movies and TV shows using TMDB APIs
 - ⭐ **Rating System** - Rate content from 1-5 stars
 - 📊 **Analytics Dashboard** - Detailed insights into your collection
   - Genre preferences and trends
   - Watch completion rates
   - Rating distributions
-  - Decade/year analysis
+  - Total watch time calculation
 - 🎭 **Browse by Genre** - Explore popular content by genre with infinite scroll
-- 🎯 **Smart Recommendations** - AI-powered suggestions based on:
-  - Your vault's genre preferences
-  - Custom two-title matching
+- 🎯 **Smart Recommendations** - AI-powered suggestions based on your vault
 - 📺 **Separate Lists** - Dedicated sections for Movies and TV Shows
 - ✅ **Watch Tracking** - Mark content as watched/unwatched
 - 📥 **Import/Export** - Backup and restore your vault via CSV
-- 🎨 **Modern UI** - Dark theme with smooth animations and responsive design
-- 📱 **Mobile Friendly** - Fully responsive interface
+- 🎨 **Premium UI** - Dark theme with smooth animations, glassmorphism, and optimized grid layouts
+- 📱 **PWA Support** - Add to Home Screen on iOS and Android with a custom optimized logo
 
-## 📸 Screenshots
+## 🚀 Recent Enhancements
 
-<img width="1433" height="905" alt="Screenshot 2025-12-24 134341" src="https://github.com/user-attachments/assets/f216df82-01b0-4fb7-94aa-a42d12222dfc" />
-
+- **Wider Vault Tiles**: Optimized grid layout for movies and TV shows. Tiles are now wider horizontally, allowing for better visibility of titles and ratings.
+- **Mobile Home Screen Optimization**: Full PWA support with a custom, edge-to-edge "FlickVault" icon designed specifically for iOS and Android home screens.
+- **Improved Analytics**: Now includes dedicated total watch time calculation (hours and minutes) and enhanced visual genre bars.
+- **Refined Directory Structure**: Project now uses a standard `public/` directory for better asset management and security.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- OMDb API Key (free) - [Get one here](http://www.omdbapi.com/apikey.aspx)
 - TMDB API Key (free) - [Get one here](https://www.themoviedb.org/settings/api)
 
 ### Installation
@@ -52,31 +52,47 @@ cd flickvault
 Edit `docker-compose.yml` and add your API keys:
 ```yaml
 environment:
-  - OMDB_API_KEY=your_omdb_api_key_here
   - TMDB_API_KEY=your_tmdb_api_key_here
 ```
 
 3. **Build and Run**
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 4. **Access the Application**
 
 Open your browser to `http://localhost:10800`
 
+## 📱 Mobile Installation (Add to Home Screen)
+
+FlickVault is built as a Progressive Web App (PWA).
+
+**On iOS (iPhone/iPad):**
+1. Open the app in **Safari**.
+2. Tap the **Share** button (the square with an arrow pointing up).
+3. Scroll down and tap **"Add to Home Screen"**.
+4. Tap **Add** in the top right corner.
+
+**On Android:**
+1. Open the app in **Chrome**.
+2. Tap the **Menu** icon (three dots) in the top right.
+3. Tap **"Install app"** or **"Add to Home screen"**.
+
 ## 📁 Project Structure
 
 ```
 flickvault/
+├── server.js              # Express backend server
 ├── Dockerfile              # Docker container configuration
 ├── docker-compose.yml      # Docker Compose setup
 ├── package.json           # Node.js dependencies
-├── server.js              # Express backend server
-└── public/
+└── public/                # Static frontend assets
     ├── index.html         # Main HTML file
-    ├── style.css          # Styling
-    └── app.js             # Frontend JavaScript
+    ├── style.css          # Styling (Optimized Grids)
+    ├── app.js             # Frontend Logic
+    ├── manifest.json      # PWA Configuration
+    └── apple-touch-icon.png # Optimized Mobile Icon
 ```
 
 ## 🔧 Configuration
@@ -85,47 +101,8 @@ flickvault/
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `OMDB_API_KEY` | OMDb API key for movie/TV data | Yes |
 | `TMDB_API_KEY` | TMDB API key for browse/recommendations | Yes |
 | `PORT` | Server port (default: 10800) | No |
-
-### Data Persistence
-
-User data is stored in Docker volume `flickvault_data` at `/data` inside the container. Each user gets a separate JSON file for their vault.
-
-## 📖 Usage Guide
-
-### Getting Started
-
-1. **Register/Login** - Create an account or login with existing credentials
-2. **Search Content** - Use the search bar to find movies or TV shows
-3. **Add to Vault** - Click "Add to Vault" on any item
-4. **Rate & Track** - Click stars to rate, use buttons to mark as watched
-
-### Features
-
-#### Browse Popular Content
-- Click "Browse" in the header
-- Filter by genre (Action, Comedy, Drama, etc.)
-- Infinite scroll for continuous discovery
-- Click any item for detailed information
-
-#### Get Recommendations
-- **My Vault**: AI recommendations based on your collection's genres
-- **Custom Match**: Enter two titles you love for personalized suggestions
-
-#### Analytics Dashboard
-View comprehensive statistics:
-- Collection overview (total items, watch rates, runtime)
-- Top genres with visual bars
-- Rating distributions for movies and TV shows separately
-- Most common years and decades
-- Average ratings and 5-star counts
-
-#### Import/Export
-- **Export**: Download your vault as CSV for backup
-- **Import**: Restore from CSV file
-- **Clear**: Reset your vault completely
 
 ## 🛠️ API Endpoints
 
@@ -144,76 +121,43 @@ POST /api/vault/:username/import
 
 ### Search & Details
 ```
-GET /api/search?query={query}&type={movie|series}
-GET /api/details/:imdbID
+GET /api/tmdb/search/multi?query={query}
+GET /api/tmdb/details/:id?type={movie|tv}
 ```
 
 ### TMDB Integration
 ```
 GET  /api/tmdb/browse/:genre?page={page}
-GET  /api/tmdb/details/:id?type={movie|tv}
 GET  /api/tmdb/recommendations?page={page}
 POST /api/tmdb/custom-recommendations
-Body: { title1, title2 }
-```
-
-### Health Check
-```
-GET /health
 ```
 
 ## 🧰 Technology Stack
 
 **Backend**
-- Node.js 18
+- Node.js 18 (Alpine)
 - Express.js
-- node-fetch
+- File-based persistence
 
 **Frontend**
 - Vanilla JavaScript (ES6+)
-- CSS3 with animations
-- Responsive design
+- CSS3 (Flexbox/Grid)
+- PWA Web Manifest
 
 **APIs**
-- [OMDb API](http://www.omdbapi.com/) - Movie & TV data
-- [TMDB API](https://www.themoviedb.org/) - Browse & recommendations
+- [TMDB API](https://www.themoviedb.org/) - The primary data source
 
 **Deployment**
-- Docker
-- Docker Compose
-
-## 🐳 Docker Commands
-
-```bash
-# Start the application
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the application
-docker-compose down
-
-# Rebuild after code changes
-docker-compose up -d --build
-
-# Remove everything including volumes
-docker-compose down -v
-```
+- Docker & Docker Compose
 
 ## 🔒 Security Notes
 
 ⚠️ **Important for Production Use:**
 
 This application is designed as a personal project. For production deployment:
-
-1. **Use a Real Database** - Replace file-based storage with PostgreSQL/MongoDB
-2. **Implement Proper Auth** - Add password hashing (bcrypt), JWT tokens
-3. **Add HTTPS** - Use SSL/TLS encryption
-4. **Environment Variables** - Use `.env` files, never commit secrets
-5. **Rate Limiting** - Implement API rate limiting
-6. **Input Validation** - Add comprehensive validation and sanitization
-7. **Error Handling** - Implement proper error logging and handling
+1. **Use a Real Database** - Replace file-based storage with PostgreSQL/MongoDB.
+2. **Implement Proper Auth** - Add bcrypt hashing and JWT tokens.
+3. **Add HTTPS** - Use SSL/TLS encryption.
 
 ## 📝 License
 
@@ -221,54 +165,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [OMDb API](http://www.omdbapi.com/) for movie and TV show data
-- [TMDB](https://www.themoviedb.org/) for additional content and images
-- Inspired by Netflix's UI/UX design
-
-## 📧 Support
-
-If you encounter any issues or have questions:
-- Open an issue on GitHub
-- Check existing issues for solutions
-- Review the troubleshooting section below
-
-## 🐛 Troubleshooting
-
-**Container won't start?**
-```bash
-# Check if port 10800 is available
-lsof -i :10800
-
-# View detailed logs
-docker-compose logs -f
-```
-
-**Search not working?**
-- Verify API keys are correctly set in `docker-compose.yml`
-- Check you haven't exceeded API rate limits
-- OMDb free tier: 1,000 requests/day
-- TMDB free tier: Check your account dashboard
-
-**Can't login?**
-```bash
-# Restart the container
-docker-compose restart
-
-# Clear browser data (if needed)
-# In browser console: localStorage.clear()
-```
-
-**Data not persisting?**
-```bash
-# Check volume exists
-docker volume ls | grep flickvault
-
-# Inspect volume
-docker volume inspect flickvault_data
-```
+- [TMDB](https://www.themoviedb.org/) for the incredible movie database.
+- Inspired by Netflix's UI/UX.
 
 ---
 
-Made with ❤️ by [Grant]
+Made with ❤️ by [CyberBigfoot]
 
 ⭐ If you find this project helpful, please consider giving it a star!
