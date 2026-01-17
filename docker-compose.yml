@@ -7,7 +7,6 @@ services:
     ports:
       - "10800:10800"
     environment:
-      - OMDB_API_KEY=YOUR_OMDB_API_KEY_HERE
       - TMDB_API_KEY=YOUR_TMDB_API_KEY_HERE
     volumes:
       - flickvault_data:/data
