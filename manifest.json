@@ -1,0 +1,23 @@
+{
+    "name": "FlickVault",
+    "short_name": "FlickVault",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0f0c29",
+    "theme_color": "#e50914",
+    "description": "Your personal movie and TV show collection manager.",
+    "icons": [
+        {
+            "src": "apple-touch-icon.png?v=4",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "apple-touch-icon.png?v=4",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
